@@ -8,8 +8,10 @@ const path = require('path');
 const cookieParser = require('cookie-parser')
 const csrf = require("csrf");
 const tokens = new csrf();
+const helmet = require('helmet');
+const { body, validationResult } = require('express-validator');
 const secretTokenCSRF = 'OEKFNEZKkF78EZFH93';
-
+require('dotenv').config();
 const app = express();
 const port = 3000;
 const corsOptions = {
@@ -20,18 +22,26 @@ const corsOptions = {
 }
 // Middleware
 
+const fieldValidations = [
+  body('annee').isInt(),
+  body('marque').isString(),
+  body('modele').isString(),
+  body('client_id').isInt(),
+];
+
 app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(cors(corsOptions))
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet());
 
 // MySQL Connection
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'Aphilia2024',
-  database: 'garage_db',
-  port: 3306
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT
 });
 
 db.connect((err) => {
@@ -130,7 +140,7 @@ app.post('/api/signin', (req, res) => {
     }
 
     const token = jwt.sign({ id: user.id }, 'OEKFNEZKkF78EZFH93023NOEAF', { expiresIn: 86400 });
-    res.cookie('token', token, { httpOnly: true, maxAge: 86400000 }); // 86400000 ms = 24 heures
+    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 86400000 }); // 86400000 ms = 24 heures
 
     res.status(200).send({ auth: true, role: user.role});
   });
@@ -183,10 +193,14 @@ app.delete('/api/vehicules/:id', (req, _res, next) => {
   });
 });
 
-app.put('/api/vehicules/:id', (req, _res, next) => {
+app.put('/api/vehicules/:id', fieldValidations, (req, _res, next) => {
   req.requiredroles = ["admin"];
   next();
 }, verifyTokenAndRole, (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   const id = req.params.id;
   const { annee, marque, modele, client_id } = req.body;
   const sql = 'UPDATE vehicules SET annee = ?, marque = ?, modele = ?, client_id = ? WHERE id = ?';
@@ -200,7 +214,7 @@ app.put('/api/vehicules/:id', (req, _res, next) => {
   });
 });
 
-app.post('/api/vehicules', (req, _res, next) => {
+app.post('/api/vehicules', fieldValidations, (req, _res, next) => {
   req.requiredroles = ["admin"];
   next();
 }, verifyTokenAndRole, (req, res) => {

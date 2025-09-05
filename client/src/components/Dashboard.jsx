@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
+import { isConnected } from "../utils/auth";
 import './Dashboard.css';
 const baseURI = import.meta.env.VITE_API_BASE_URL;
 
@@ -17,6 +18,9 @@ const AdminDashboard = () => {
           },
           credentials: 'include'
         });
+        if (!isConnected(response, navigate)) {
+          return;
+        }
         if (response.ok) {
           const data = await response.json();
           setClientCount(data.count);

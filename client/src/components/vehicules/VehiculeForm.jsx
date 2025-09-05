@@ -23,6 +23,7 @@ function VehiculeForm({ isOpen, onClose, actionTitle, vehiculeData, clientsList,
                                         type="text"
                                         className="form-control"
                                         id="marque"
+                                        maxLength="50"
                                         name="marque"
                                         value={vehiculeData.marque || ''}
                                         onChange={onInputChange}
@@ -32,6 +33,7 @@ function VehiculeForm({ isOpen, onClose, actionTitle, vehiculeData, clientsList,
                                     <label htmlFor="modele" className="form-label">Modele</label>
                                     <input
                                         type="text"
+                                        maxLength="50"
                                         className="form-control"
                                         id="modele"
                                         name="modele"
@@ -45,6 +47,10 @@ function VehiculeForm({ isOpen, onClose, actionTitle, vehiculeData, clientsList,
                                         type="number"
                                         className="form-control"
                                         id="annee"
+                                        minLength={4}
+                                        maxLength={4}
+                                        min={1900}
+                                        max={new Date().getFullYear()}
                                         name="annee"
                                         value={vehiculeData.annee || ''}
                                         onChange={onInputChange}

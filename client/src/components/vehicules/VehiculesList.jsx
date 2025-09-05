@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { isConnected } from "../../utils/auth";
 import VehiculeForm from "./VehiculeForm";
 const baseURI = import.meta.env.VITE_API_BASE_URL;
 
 function VehiculesList() {
+    const navigate = useNavigate();
     const [vehicules, setVehicules] = useState([]);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [vehiculeToDelete, setVehiculeToDelete] = useState(null);
     const [clients, setClients] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
-    // Usamos solo un estado para los datos del formulario
     const [currentVehicule, setCurrentVehicule] = useState({
         marque: '',
         modele: '',
@@ -26,6 +28,9 @@ function VehiculesList() {
                 },
                 credentials: 'include'
             });
+            if (!isConnected(response, navigate)) {
+                return;
+            }
             if (response.ok) {
                 const data = await response.json();
                 setClients(data);
@@ -45,6 +50,9 @@ function VehiculesList() {
                 },
                 credentials: 'include'
             });
+            if (!isConnected(response, navigate)) {
+                return;
+            }
             if (response.ok) {
                 const data = await response.json();
                 setVehicules(data);
@@ -63,6 +71,11 @@ function VehiculesList() {
     }, []);
 
     const handleSaveOrUpdateVehicule = async () => {
+        const error = handleValidateVehicule();
+        if (error) {
+            alert(error);
+            return;
+        }
         if (isEditing) {
             try {
                 const response = await fetch(baseURI + `api/vehicules/${currentVehicule.id}`, {
@@ -105,6 +118,17 @@ function VehiculesList() {
             }
         }
     };
+
+    const handleValidateVehicule = () => {
+        if (!currentVehicule.marque || !currentVehicule.modele || !currentVehicule.annee) {
+            return 'Veuillez remplir tous les champs obligatoires';
+        }
+        if (!currentVehicule.marque.trim()) return 'Le champ marque est obligatoire';
+        if (!currentVehicule.modele.trim()) return 'Le champ modele est obligatoire';
+        if (!/^\d{4}$/.test(currentVehicule.annee)) return "Année doit être YYYY";
+        if (currentVehicule.annee < 1900 || currentVehicule.annee > 9999) return "Année doit etre comprise entre 1900 et 9999";
+        return null;
+    }
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
