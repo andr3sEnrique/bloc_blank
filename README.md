@@ -43,11 +43,11 @@ npm install
 Créez un fichier `.env` à la racine du projet avec les variables suivantes :
 
 ```env
-DB_HOST=localhost
-DB_USER=root
+DB_HOST=''
+DB_USER='votre_user_mysql'
 DB_PASS=votre_mot_de_passe_mysql
 DB_NAME=garage_db
-DB_PORT=3306
+DB_PORT='votre_port'
 ```
 
 **Note :** Modifiez `DB_PASS` avec votre mot de passe MySQL réel.
